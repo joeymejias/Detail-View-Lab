@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ly.generalassemb.drewmahrt.shoppinglistwithdetailview">
+          package="ly.generalassemb.drewmahrt.shoppinglistwithdetailview">
 
     <application
         android:allowBackup="true"
@@ -23,6 +23,11 @@
             <meta-data
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
+        </activity>
+        <activity android:name=".DetailActivity"
+                  android:parentActivityName=".MainActivity"
+                  android:label="Detail">
+
         </activity>
     </application>
 

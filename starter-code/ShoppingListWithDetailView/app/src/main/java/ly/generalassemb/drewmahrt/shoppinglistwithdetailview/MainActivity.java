@@ -3,7 +3,6 @@ package ly.generalassemb.drewmahrt.shoppinglistwithdetailview;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -21,7 +20,6 @@ import ly.generalassemb.drewmahrt.shoppinglistwithdetailview.setup.DBAssetHelper
 public class MainActivity extends AppCompatActivity {
     private ListView mShoppingListView;
     private CursorAdapter mCursorAdapter;
-    private ShoppingSQLiteOpenHelper mHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,12 +31,31 @@ public class MainActivity extends AppCompatActivity {
         dbSetup.getReadableDatabase();
 
         mShoppingListView = (ListView)findViewById(R.id.shopping_list_view);
-        mHelper = new ShoppingSQLiteOpenHelper(MainActivity.this);
 
-        Cursor cursor = mHelper.getShoppingList();
+        Cursor cursor = ShoppingSQLiteOpenHelper.getInstance(MainActivity.this).getShoppingList();
 
         mCursorAdapter = new SimpleCursorAdapter(this,android.R.layout.simple_list_item_1,cursor,new String[]{ShoppingSQLiteOpenHelper.COL_ITEM_NAME},new int[]{android.R.id.text1},0);
         mShoppingListView.setAdapter(mCursorAdapter);
+
+        mShoppingListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent i = new Intent(MainActivity.this,DetailActivity.class);
+                Cursor selectedItem = (Cursor)parent.getItemAtPosition(position);
+
+                /*
+                    We need to tell DetailActivity which item the user clicked. Rather than try to pass the
+                    whole item through the Intent object, instead let's just pass the primary key value for the
+                    selected item. Then DetailActivity can do its own query to grab all the info about that item.
+
+                    COL_ID is the name of the primary key column. Get the value in that column, then add it
+                    to the Intent as an extra.
+                 */
+                int databaseID = selectedItem.getInt(selectedItem.getColumnIndex(ShoppingSQLiteOpenHelper.COL_ID));
+                i.putExtra("dbIndex",databaseID);
+                startActivity(i);
+            }
+        });
 
         handleIntent(getIntent());
     }
@@ -66,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private void handleIntent(Intent intent) {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
-            Cursor cursor = mHelper.searchShoppingList(query);
+            Cursor cursor = ShoppingSQLiteOpenHelper.getInstance(MainActivity.this).searchShoppingList(query);
             mCursorAdapter.changeCursor(cursor);
             mCursorAdapter.notifyDataSetChanged();
         }
